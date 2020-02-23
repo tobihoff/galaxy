@@ -1,175 +1,76 @@
-"use strict";
+const romanToDecimal = {
+  M: 1000,
+  D: 500,
+  C: 100,
+  L: 50,
+  X: 10,
+  V: 5,
+  I: 1
+};
 
-const romanToDecimal = [
-  {
-    id: "I",
-    value: 1
-  },
-  {
-    id: "V",
-    value: 5
-  },
-  {
-    id: "X",
-    value: 10
-  },
-  {
-    id: "L",
-    value: 50
-  },
-  {
-    id: "C",
-    value: 100
-  },
-  {
-    id: "D",
-    value: 500
-  },
-  {
-    id: "M",
-    value: 1000
-  }
-];
-
-function declareValue(str) {
-  let newArray = str.split("");
-  let newObject = new Object();
-  newObject = newArray.map(value => {
-    const container = {};
-    container.id = value;
-    container.value = "";
-    return container;
-  });
-  const assignValue = newObject.map(int =>
-    romanToDecimal.find(int2 => int.id === int2.id)
+function isValidRomanNumber(romanNumber) {
+  return (
+    !romanNumber.match(/[^IVXLCDM]/g) &&
+    !romanNumber.match(/V{2,}|L{2,}|D{2,}/g) &&
+    !romanNumber.match(/(I|C|M|X){4,}/g)
   );
-  return assignValue;
 }
 
-//Check if the string corresponds to the specifications and does not contain unknown values.
-function checkValidation(str) {
-  if (
-    str.match(/[^IVXLCDM]/g) ||
-    (str.match(/V{2,}|L{2,}|D{2,}/g) && !str.match(/(I|C|M|X){2,3}/g))
-  ) {
-    return false;
+function convertToDecimalNumber(romanNumber) {
+  const romanChars = romanNumber.split("");
+
+  let decimalNumber = 0;
+  for (let index = 0; index < romanChars.length; index++) {
+    const romanChar = romanChars[index];
+    const nextRomanChar = romanChars[index + 1];
+
+    if (romanChar === "I") {
+      if (nextRomanChar === "V" || nextRomanChar === "X") {
+        decimalNumber +=
+          romanToDecimal[nextRomanChar] - romanToDecimal[romanChar];
+        index++; // Skip next char
+      } else {
+        decimalNumber += romanToDecimal[romanChar];
+      }
+    }
+
+    if (romanChar === "X") {
+      if (nextRomanChar === "L" || nextRomanChar === "C") {
+        decimalNumber +=
+          romanToDecimal[nextRomanChar] - romanToDecimal[romanChar];
+        index++; // Skip next char
+      } else {
+        decimalNumber += romanToDecimal[romanChar];
+      }
+    }
+
+    if (romanChar === "C") {
+      if (nextRomanChar === "D" || nextRomanChar === "M") {
+        decimalNumber +=
+          romanToDecimal[nextRomanChar] - romanToDecimal[romanChar];
+        index++; // Skip next char
+      } else {
+        decimalNumber += romanToDecimal[romanChar];
+      }
+    }
+
+    if (
+      romanChar === "V" ||
+      romanChar === "L" ||
+      romanChar === "D" ||
+      romanChar === "M"
+    ) {
+      decimalNumber += romanToDecimal[romanChar];
+    }
   }
-  return createObject(str);
+
+  return decimalNumber;
 }
 
-//Data structure is manipulated for an object.
-function createObject(str) {
-  let newArray = str.split("");
-  let newObject = new Object();
-  newObject = newArray.map(value => {
-    const container = {};
-    container.id = value;
-    container.value = "";
-    return container;
-  });
-  const assignValue = newObject.map(int =>
-    romanToDecimal.find(int2 => int.id === int2.id)
-  );
-  return respectRules(assignValue);
+const romanNumber = process.argv[2];
+if (!isValidRomanNumber(romanNumber)) {
+  throw new Error(`${romanNumber} is not valid`);
 }
 
-//The array must be manipulated and put in the right order to add the operators in the next step.
-function respectRules(str) {
-  const prepareOrder = str.map(string => string.id);
-
-  function swap(arr, index1, index2) {
-    [arr[index1], arr[index2]] = [arr[index2], arr[index1]];
-    return arr;
-  }
-
-  if (
-    prepareOrder.find(
-      element =>
-        element === "I" &&
-        prepareOrder.indexOf("I") < prepareOrder.indexOf("V" || "X")
-    )
-  )
-    swap(
-      prepareOrder,
-      prepareOrder.indexOf("I"),
-      prepareOrder.indexOf("V" || "X")
-    );
-  if (
-    prepareOrder.find(
-      element =>
-        element === "X" &&
-        prepareOrder.indexOf("X") < prepareOrder.indexOf("L" || "C")
-    )
-  )
-    swap(
-      prepareOrder,
-      prepareOrder.indexOf("X"),
-      prepareOrder.indexOf("L" || "C")
-    );
-  if (
-    prepareOrder.find(
-      element =>
-        element === "C" &&
-        prepareOrder.indexOf("C") < prepareOrder.indexOf("D" || "M")
-    )
-  )
-    swap(
-      prepareOrder,
-      prepareOrder.indexOf("C"),
-      prepareOrder.indexOf("D" || "M")
-    );
-
-  const getString = prepareOrder.join().replace(/,/g, "");
-  const getValue = declareValue(getString);
-  return addOperators(getValue);
-}
-
-//The necessary operators must be added to the array. The index is compared to include the rules.
-function addOperators(str) {
-  const symbols = str.map(id => id.id);
-  const values = str.map(value => value.value);
-  console.log(symbols);
-
-  if (
-    symbols.indexOf("I") > symbols.indexOf("V" || "X") &&
-    symbols.includes("V" || "X")
-  )
-    values.splice(values.indexOf(1), 0, "-");
-  else values.splice(values.indexOf(1), 0, "+");
-
-  if (
-    symbols.indexOf("X") > symbols.indexOf("L" || "C") &&
-    symbols.includes("L" || "C")
-  )
-    values.splice(values.indexOf(10), 0, "-");
-  else values.splice(values.indexOf(10), 0, "+");
-
-  if (
-    symbols.indexOf("C") > symbols.indexOf("D" || "M") &&
-    symbols.includes("D" || "M")
-  )
-    values.splice(values.indexOf(100), 0, "-");
-  else values.splice(values.indexOf(100), 0, "+");
-
-  if (symbols.filter(element => element === "V"))
-    values.splice(values.indexOf(5), 0, "+");
-
-  if (symbols.filter(element => element === "L"))
-    values.splice(values.indexOf(50), 0, "+");
-
-  if (symbols.filter(element => element === "D"))
-    values.splice(values.indexOf(500), 0, "+");
-
-  if (symbols.filter(element => element === "M"))
-    values.splice(values.indexOf(1000), 0, "+");
-
-  return calculation(values);
-}
-
-function calculation(str) {
-  const result = str.join().replace(/,/g, "");
-  return console.log(eval(result));
-}
-
-let y = "MCMIII";
-const test = checkValidation(y);
+const decimalNumber = convertToDecimalNumber(romanNumber);
+console.log(`${romanNumber} is ${decimalNumber}`);
